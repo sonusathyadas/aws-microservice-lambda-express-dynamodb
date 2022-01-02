@@ -36,7 +36,30 @@ This tutorial will help you to create a serverless microservice for managing the
     custom:
       tableName: 'Todos'    
     ```
-7) Update the `functions` section to change the Lambda api name as `todo-api`.
+7) In the provider section, update the environment variable name to `TODO_TABLE`.
+    ```yml
+    provider:
+      name: aws
+      runtime: nodejs12.x
+      lambdaHashingVersion: '20201221'
+      iam:
+        role:
+          statements:
+            - Effect: Allow
+              Action:
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+              Resource:
+                - Fn::GetAtt: [ TodoTable, Arn ]
+      environment:
+        TODO_TABLE: ${self:custom.tableName}
+    ```
+
+8) Update the `functions` section to change the Lambda api name as `todo-api`.
     ```yml
     functions:
       todo-api:
@@ -45,7 +68,7 @@ This tutorial will help you to create a serverless microservice for managing the
           - httpApi: '*'
     ```
 
-8) Also update the configuration for DynamoDb by updating the `resources` section. It will create a DynamoDb resource with the table name specified in the above custom section. The table will have a partition key `Email` and a Sort key `Id`.
+9) Also update the configuration for DynamoDb by updating the `resources` section. It will create a DynamoDb resource with the table name specified in the above custom section. The table will have a partition key `Email` and a Sort key `Id`.
 
     ```yml
     resources:
@@ -67,12 +90,12 @@ This tutorial will help you to create a serverless microservice for managing the
             TableName: ${self:custom.tableName}
     ```
 
-9) In the project you need to install some npm dependencies such as `@aws-sk/client-dynamodb`, `@aws-sdk/util-dynamodb`, and `uuid`.
+10) In the project you need to install some npm dependencies such as `@aws-sk/client-dynamodb`, `@aws-sdk/util-dynamodb`, and `uuid`.
     ```bash
     npm install -S @aws-sk/client-dynamodb @aws-sdk/util-dynamodb uuid
     ```
 
-10) Create a new folder in the project and name it as `helpers`. Add a new file called `ddbclient.js` to it and add the following code to it.
+11) Create a new folder in the project and name it as `helpers`. Add a new file called `ddbclient.js` to it and add the following code to it.
     ```javascript
     const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 
@@ -81,7 +104,7 @@ This tutorial will help you to create a serverless microservice for managing the
     module.exports =  { ddbClient };
     ```
 
-11) Also add another javascript file called `todo-helper.js` in the `helpers` folder and add the following CRUD operations code to it.
+12) Also add another javascript file called `todo-helper.js` in the `helpers` folder and add the following CRUD operations code to it.
     ```javascript
     
     const { ddbClient } = require('./ddbclient');
@@ -162,7 +185,7 @@ This tutorial will help you to create a serverless microservice for managing the
     module.exports = { TodoService }
     ```
 
-12) Create another folder in the project root folder named `routes`. Define the express routes configurations inside this folder. Create a new javascript file named `todo-routes.js` in the `routes` folder and add the following code to it.
+13) Create another folder in the project root folder named `routes`. Define the express routes configurations inside this folder. Create a new javascript file named `todo-routes.js` in the `routes` folder and add the following code to it.
     ```javascript    
     const { Router } = require('express');
     const uuid = require('uuid');
@@ -243,7 +266,7 @@ This tutorial will help you to create a serverless microservice for managing the
     module.exports = router;
     ```
 
-13) Update the `handler.js` file in the root folder with the following code. This will configure the routes for the microservices api.
+14) Update the `handler.js` file in the root folder with the following code. This will configure the routes for the microservices api.
     ```javascript    
     const express = require("express");
     const serverless = require("serverless-http");
@@ -263,13 +286,13 @@ This tutorial will help you to create a serverless microservice for managing the
         
     module.exports.handler = serverless(app);
     ```
-14) You are now ready to deploy the project to AWS. Run the following command to deploy the serverless application in AWS Lambda. It also create the dependent resources such as `IAM role`, `API gateway` `S3 bucket` and `DynamoDB`.
+15) You are now ready to deploy the project to AWS. Run the following command to deploy the serverless application in AWS Lambda. It also create the dependent resources such as `IAM role`, `API gateway` `S3 bucket` and `DynamoDB`.
 
     ```bash
     serverless deploy
     ```
 
-15) After the deployment is successfully completed, you can see the http endpoint of your API gateway to invoke the microservice.
+16) After the deployment is successfully completed, you can see the http endpoint of your API gateway to invoke the microservice.
     ```bash
     Serverless: Packaging service...
     Serverless: Excluding development dependencies...
